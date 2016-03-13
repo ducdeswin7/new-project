@@ -1,6 +1,7 @@
-# new-project
-this is a base for new project with npm
+# New-project
 
-pour installer les dependances, il faut lancer la commande 
-###npm install
+you can rename the project in the package.json
 
+then open the command line to tape:
+
+## npm install 
