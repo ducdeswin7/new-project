@@ -8,12 +8,13 @@ var gulp = require('gulp'),
     sourcemaps = require('gulp-sourcemaps'),
     autoprefixer = require('gulp-autoprefixer'),
     uglify = require('gulp-uglify'),
-    ignore = require('gulp-ignore');
+    ignore = require('gulp-ignore'),
+    browserSync = require('browser-sync').create();
 
-var input = './stylesheets/**/*.scss',
-    output = './public/css',
-    jsInput = 'javascripts/*.js',
-    jsOutput = 'public/javascripts',
+var input = './assets/stylesheets/**/*.scss',
+    output = './dist/css',
+    jsInput = './assets/javascripts/*.js',
+    jsOutput = './dist/javascripts',
     condition = '_*.scss';
 
 var sassOptions = {
@@ -24,22 +25,24 @@ var sassOptions = {
     browsers: ['last 2 versions', '> 5%', 'Firefox ESR']
     },
     sassdocOptions = {
-        dest: './public/sassdoc'
+        dest: './dist/sassdoc'
     };
 
 gulp.task('sass', function () {
     return gulp
-    // Find all `.scss` files from the `stylesheets/` folder
+        // Find all `.scss` files from the `stylesheets/` folder
         .src(input)
         .pipe(ignore.exclude(condition))
         // Run Sass on those files
         .pipe(sass(sassOptions).on('error', sass.logError))
         //source map
-        .pipe(sourcemaps.write('./stylesheets/maps'))
+        .pipe(sourcemaps.write('./dist/stylesheets/maps'))
         //
         .pipe(autoprefixer(autoprefixerOptions))
         // Write the resulting CSS in the output folder
         .pipe(gulp.dest(output))
+        // Compile sass into CSS & auto-inject into browsers
+        .pipe(browserSync.stream())
         // Release the pressure back and trigger flowing mode (drain)
         // See: http://sassdoc.com/gulp/#drain-event
         .resume();
@@ -61,6 +64,15 @@ gulp.task('compress', function() {
         .pipe(gulp.dest(jsOutput));
 });
 
+gulp.task('serve', ['sass'], function() {
+    browserSync.init({
+        server: {
+            baseDir: "./"
+        }
+    });
+    gulp.watch(input, ['sass']);
+    gulp.watch("./*.html").on('change', browserSync.reload);
+});
 
 gulp.task('watch', function() {
     gulp
@@ -88,4 +100,4 @@ gulp.task('prod', ['sassdoc'], function () {
         .pipe(gulp.dest(output));
 });
 
-gulp.task('default', ['sass', 'compress' ,'watch' /*, possible other tasks... */]);
+gulp.task('default', ['sass', 'compress' ,'watch', 'serve' /* possible other tasks... */]);
